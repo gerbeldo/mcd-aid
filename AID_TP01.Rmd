@@ -40,9 +40,9 @@ reca02 <- read_csv("AID_TP01_datos/RECA_CHAN_02_NEW.csv")
 reca03 <- read_csv("AID_TP01_datos/RECA_CHAN_03_NEW.csv")
 ```
 
-Limpio tablas, y las junto en un solo dataframe, con una columna `month` que especifique
-a que mes corresponde cada observacion.
 
+Defino una funcion de limpieza para las bases correspondientes a enero, febrero y marzo.
+Limpia los nombres, y genera las columnas nuevas necesarias para el posterior analisis.
 
 ```{r}
 limpio_recargas <- function(x) {
@@ -59,6 +59,8 @@ limpio_recargas <- function(x) {
 }
 ```
 
+Mediante la combinacion `purrr::map` y ``purrr::reduce` aplico la funcion de limpieza
+a la lista de los tres data frames, y luego los combino usando `dplyr::bind_rows`.
 
 ```{r}
 list(reca01, reca02, reca03) %>% 
@@ -66,7 +68,7 @@ list(reca01, reca02, reca03) %>%
   reduce(bind_rows) -> recargas
 ```
 
-Elimino tablas simples.
+Elimino tablas simples para ahorrar memoria.
 
 ```{r}
 rm(list = ls(pattern = "reca\\d"))
