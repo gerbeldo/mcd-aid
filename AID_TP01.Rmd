@@ -1,0 +1,65 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+# load data 
+
+## dna
+
+```{r}
+dna <- read_csv("AID_TP01_datos/DNA_03_NEW.csv")
+dna %>% 
+  janitor::clean_names() -> dna
+```
+
+Investigo columna base_stat, cambiandola a factor, viendo los niveles, y me saco de encima las 
+filas que no me interesan, lease, las que no son ACTIVE BASE o REJOINER
+
+```{r}
+dna %>% mutate(base_stat_03 = factor(base_stat_03)) -> dna
+
+dna %>%
+  select(-x1) %>% 
+  filter(base_stat_03 %in% c("ACTIVE BASE", "REJOINNER")) -> dna
+  
+```
+
+## recargas
+
+```{r}
+reca01 <- read_csv("AID_TP01_datos/RECA_CHAN_01_NEW.csv")
+reca02 <- read_csv("AID_TP01_datos/RECA_CHAN_02_NEW.csv")
+reca03 <- read_csv("AID_TP01_datos/RECA_CHAN_03_NEW.csv")
+```
+
+Limpio tablas
+
+```{r}
+reca01 %>% 
+  janitor::clean_names() %>% 
+  select(-x1) %>% 
+  filter(purchaseamount > 0) %>% 
+  mutate(purchasetime = parse_date_time(purchasetime, "d b Y H M S")) -> reca01
+
+reca02 %>% 
+  janitor::clean_names() %>% 
+  select(-x1) %>% 
+  filter(purchaseamount > 0) %>% 
+  mutate(purchasetime = parse_date_time(purchasetime, "d b Y H M S")) -> reca02
+
+reca03 %>% 
+  janitor::clean_names() %>% 
+  select(-x1) %>% 
+  filter(purchaseamount > 0) %>% 
+  mutate(purchasetime = parse_date_time(purchasetime, "d b Y H M S")) -> reca03
+```
+
+
