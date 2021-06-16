@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "AID TP 01"
 output: html_notebook
 editor_options: 
   chunk_output_type: console
@@ -45,18 +45,32 @@ a que mes corresponde cada observacion.
 
 
 ```{r}
-limpio <- function(x) {
+limpio_recargas <- function(x) {
   x %>% janitor::clean_names() %>% 
   select(-x1) %>% 
   filter(purchaseamount > 0) %>% 
   mutate(purchasetime = parse_date_time(purchasetime, "d b Y H M S"),
-         month = month(purchasetime))
+         month = month(purchasetime),
+         channel_type = if_else(
+           str_detect(channelidentifier, "EMG"),
+           true = "tecno", false = "manual"
+           )
+         ) 
 }
 ```
 
 
 ```{r}
 list(reca01, reca02, reca03) %>% 
-  map(limpio) %>% 
+  map(limpio_recargas) %>% 
   reduce(bind_rows) -> recargas
 ```
+
+Elimino tablas simples.
+
+```{r}
+rm(list = ls(pattern = "reca\\d"))
+```
+
+```
+
