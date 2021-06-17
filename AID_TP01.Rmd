@@ -7,39 +7,35 @@ editor_options:
 
 ```{r}
 library(tidyverse)
-library(lubridate)
 ```
 
-# load data 
+# load + wrangling 
 
-## dna
+## clientes
 
 ```{r}
-dna <- read_csv("AID_TP01_datos/DNA_03_NEW.csv")
-dna %>% 
-  janitor::clean_names() -> dna
+clientes <- read_csv("AID_TP01_datos/DNA_03_NEW.csv") %>% 
+  janitor::clean_names()
 ```
 
-Investigo columna `base_stat`, cambiandola a `factor`, viendo los niveles, y me saco de encima las 
+Investigo columna `base_stat_03`, cambiandola a `factor`. Viendo los niveles, me saco de encima las 
 filas que no me interesan, lease, las que no son "ACTIVE BASE" o "REJOINER"
 
 ```{r}
-dna %>% mutate(base_stat_03 = factor(base_stat_03)) -> dna
+clientes %>% mutate(base_stat_03 = factor(base_stat_03)) -> clientes
 
-dna %>%
+clientes %>%
   select(-x1) %>% 
-  filter(base_stat_03 %in% c("ACTIVE BASE", "REJOINNER")) -> dna
-  
+  filter(base_stat_03 %in% c("ACTIVE BASE", "REJOINNER")) -> clientes
 ```
 
 ## recargas
 
 ```{r}
-reca01 <- read_csv("AID_TP01_datos/RECA_CHAN_01_NEW.csv")
-reca02 <- read_csv("AID_TP01_datos/RECA_CHAN_02_NEW.csv")
-reca03 <- read_csv("AID_TP01_datos/RECA_CHAN_03_NEW.csv")
+rec01 <- read_csv("AID_TP01_datos/RECA_CHAN_01_NEW.csv")
+rec02 <- read_csv("AID_TP01_datos/RECA_CHAN_02_NEW.csv")
+rec03 <- read_csv("AID_TP01_datos/RECA_CHAN_03_NEW.csv")
 ```
-
 
 Defino una funcion de limpieza para las bases correspondientes a enero, febrero y marzo.
 Limpia los nombres, y genera las columnas nuevas necesarias para el posterior analisis.
@@ -49,8 +45,8 @@ limpio_recargas <- function(x) {
   x %>% janitor::clean_names() %>% 
   select(-x1) %>% 
   filter(purchaseamount > 0) %>% 
-  mutate(purchasetime = parse_date_time(purchasetime, "d b Y H M S"),
-         month = month(purchasetime),
+  mutate(purchasetime = lubridate::parse_date_time(purchasetime, "d b Y H M S"),
+         month = lubridate::month(purchasetime, label = TRUE),
          channel_type = if_else(
            str_detect(channelidentifier, "EMG"),
            true = "tecno", false = "manual"
@@ -59,20 +55,29 @@ limpio_recargas <- function(x) {
 }
 ```
 
-Mediante la combinacion `purrr::map` y ``purrr::reduce` aplico la funcion de limpieza
-a la lista de los tres data frames, y luego los combino usando `dplyr::bind_rows`.
+Aplico la funcion de limpieza y uno los dataframes de recargas en uno solo.
 
 ```{r}
-list(reca01, reca02, reca03) %>% 
+list(rec01, rec02, rec03) %>% 
   map(limpio_recargas) %>% 
   reduce(bind_rows) -> recargas
 ```
 
+## joining
+
+Uno las tablas `recarga` y `clientes`, mediante un inner join, ya que no me interesan
+los clientes para los cuales no tengo informacion de recargas, ni las recargas de clientes
+que no tengan  `base_stat_03` == REJOINNER o ACTIVE BASE.
+
+```{r}
+db <- clientes %>% 
+  inner_join(recargas, by = c("accs_mthd_cd" = "customerid"))
+```
+
+## limpieza
+
 Elimino tablas simples para ahorrar memoria.
 
 ```{r}
-rm(list = ls(pattern = "reca\\d"))
+rm(list = c(ls(pattern = "rec\\d"), "clientes", "recargas"))
 ```
-
-```
-
