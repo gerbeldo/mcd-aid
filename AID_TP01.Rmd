@@ -70,8 +70,8 @@ los clientes para los cuales no tengo informacion de recargas, ni las recargas d
 que no tengan  `base_stat_03` == REJOINNER o ACTIVE BASE.
 
 ```{r}
-db <- clientes %>% 
-  inner_join(recargas, by = c("accs_mthd_cd" = "customerid"))
+db <- recargas %>% 
+  inner_join(clientes, by = c("customerid" = "accs_mthd_cd"))
 ```
 
 ## limpieza
@@ -81,3 +81,37 @@ Elimino tablas simples para ahorrar memoria.
 ```{r}
 rm(list = c(ls(pattern = "rec\\d"), "clientes", "recargas"))
 ```
+
+# db 1
+
+Calculo valores totales en tabla `db_total` y unicamente las tecnologicas en `db_tecno`.
+Luego las uno (mediante un `left_join`, preservando a todos los clientes, independientemente
+del tipo de recarga.) y reemplazo los NA (que aparecen en caso de no haber realizado cargas
+por medios tecnologicos) por ceros. Almaceno todo en `db_1`.
+
+```{r}
+
+db_total <-
+  db %>%
+  group_by(accs_mthd_cd) %>%
+  summarise(
+    monto_total = sum(purchaseamount),
+    cant_recargas = n()
+  )
+
+
+db_tecno <-
+  db %>%
+  filter(channel_type == "tecno") %>%
+  group_by(accs_mthd_cd) %>%
+  summarise(
+    monto_tecno = sum(purchaseamount),
+    cant_rtec = n()
+  )
+
+db_total %>% 
+  left_join(db_tecno, by = "accs_mthd_cd") %>% 
+  replace_na(list(monto_tecno = 0, cant_rtec = 0)) -> db_1
+
+```
+
