@@ -110,8 +110,26 @@ db_tecno <-
   )
 
 db_total %>% 
-  left_join(db_tecno, by = "accs_mthd_cd") %>% 
-  replace_na(list(monto_tecno = 0, cant_rtec = 0)) -> db_1
+  left_join(db_tecno, by = "accs_mthd_cd") %>%
+  # cantidad de regargas seguro es int, monto_tecno no necesariamente.
+  replace_na(list(monto_tecno = 0, cant_rtec = 0L)) -> db_1
 
+```
+
+Luego, calculo las variables que requieren del los totales y marginales.
+
+```{r}
+
+db_1 %>% 
+  mutate(por_tecno_m = monto_tecno / monto_total * 100,
+         por_tecno = cant_rtec / cant_recargas * 100,
+         cl_tecno = case_when(por_tecno >= 70 ~ "1-Tecno",
+                              por_tecno >= 40 & por_tecno < 70 ~ "2-Mix4070",
+                              por_tecno > 0 & por_tecno < 40 ~ "3-MixH40",
+                              por_tecno == 0 ~ "4-No Tecno",
+                              TRUE ~ "ERROR"),
+         cl_tecno = case_when(cant_recargas >= 3 ~ cl_tecno,
+                              cant_recargas < 3 ~ "99-NOSEGM",
+                              TRUE ~ "ERROR")) -> db_1
 ```
 
