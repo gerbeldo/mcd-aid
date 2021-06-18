@@ -82,7 +82,7 @@ Elimino tablas simples para ahorrar memoria.
 rm(list = c(ls(pattern = "rec\\d"), "clientes", "recargas"))
 ```
 
-# db 1
+# Clientes_Mar21
 
 Calculo valores totales en tabla `db_total` y unicamente las tecnologicas en `db_tecno`.
 Luego las uno (mediante un `left_join`, preservando a todos los clientes, independientemente
@@ -98,7 +98,6 @@ db_total <-
     monto_total = sum(purchaseamount),
     cant_recargas = n()
   )
-
 
 db_tecno <-
   db %>%
@@ -130,6 +129,19 @@ db_1 %>%
                               TRUE ~ "ERROR"),
          cl_tecno = case_when(cant_recargas >= 3 ~ cl_tecno,
                               cant_recargas < 3 ~ "99-NOSEGM",
-                              TRUE ~ "ERROR")) -> db_1
+                              TRUE ~ "ERROR")) -> Clientes_Mar21
+```
+
+# db 2
+
+Calculo los resumenes pedidos.
+
+```{r}
+Clientes_Mar21 %>% 
+  group_by(cl_tecno) %>% 
+  summarise(monto_total_promedio = mean(monto_total),
+            monto_tecno_promedio = mean(monto_tecno),
+            cant_recargas_promedio = mean(cant_recargas),
+            cant_rec_tecno_promedio = mean(cant_rtec)) -> Segmentacion_Mar21
 ```
 
