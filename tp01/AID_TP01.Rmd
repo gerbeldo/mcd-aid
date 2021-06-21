@@ -157,6 +157,8 @@ Segmentacion_Mar21 <-
   )
 ```
 
+
+
 <!-- # graficos -->
 
 <!-- ```{r} -->
