@@ -127,6 +127,7 @@ db_1 %>%
                               por_tecno > 0 & por_tecno < 40 ~ "3-MixH40",
                               por_tecno == 0 ~ "4-No Tecno",
                               TRUE ~ "ERROR"),
+         
          cl_tecno = case_when(cant_recargas >= 3 ~ cl_tecno,
                               cant_recargas < 3 ~ "99-NOSEGM",
                               TRUE ~ "ERROR")) -> Clientes_Mar21
@@ -144,4 +145,26 @@ Clientes_Mar21 %>%
             cant_recargas_promedio = mean(cant_recargas),
             cant_rec_tecno_promedio = mean(cant_rtec)) -> Segmentacion_Mar21
 ```
+
+<!-- # graficos -->
+
+<!-- ```{r} -->
+<!-- Clientes_Mar21 %>%  -->
+<!--   ggplot(aes(cant_recargas)) + geom_histogram() + facet_grid(cl_tecno~. , scales = "free_y") -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- Clientes_Mar21 %>%  -->
+<!--   ggplot(aes(cant_recargas, monto_total, color = cl_tecno)) + -->
+<!--   geom_point(alpha = 0.3) + -->
+<!--   facet_grid(cl_tecno~. ) -->
+
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- Clientes_Mar21 %>%  -->
+<!--   group_by(cl_tecno) %>%  -->
+<!--   mutate(n_rows = n()) %>%  -->
+<!--   sample_frac(0.4, weight = n_rows) -->
+<!-- ``` -->
 
