@@ -14,7 +14,7 @@ library(tidyverse)
 ## clientes
 
 ```{r}
-clientes <- read_csv("AID_TP01_datos/DNA_03_NEW.csv") %>% 
+clientes <- read_csv("data/DNA_03_NEW.csv.bz2") %>% 
   janitor::clean_names()
 ```
 
@@ -32,9 +32,9 @@ clientes %>%
 ## recargas
 
 ```{r}
-rec01 <- read_csv("AID_TP01_datos/RECA_CHAN_01_NEW.csv")
-rec02 <- read_csv("AID_TP01_datos/RECA_CHAN_02_NEW.csv")
-rec03 <- read_csv("AID_TP01_datos/RECA_CHAN_03_NEW.csv")
+rec01 <- read_csv("data/RECA_CHAN_01_NEW.csv.bz2")
+rec02 <- read_csv("data/RECA_CHAN_02_NEW.csv.bz2")
+rec03 <- read_csv("data/RECA_CHAN_03_NEW.csv.bz2")
 ```
 
 Defino una funcion de limpieza para las bases correspondientes a enero, febrero y marzo.
@@ -70,8 +70,8 @@ los clientes para los cuales no tengo informacion de recargas, ni las recargas d
 que no tengan  `base_stat_03` == REJOINNER o ACTIVE BASE.
 
 ```{r}
-db <- recargas %>% 
-  inner_join(clientes, by = c("customerid" = "accs_mthd_cd"))
+db <- clientes %>% 
+  inner_join(recargas, by = c("accs_mthd_cd" = "customerid"))
 ```
 
 ## limpieza
@@ -108,10 +108,11 @@ db_tecno <-
     cant_rtec = n()
   )
 
-db_total %>% 
+db_1 <-
+  db_total %>%
   left_join(db_tecno, by = "accs_mthd_cd") %>%
   # cantidad de regargas seguro es int, monto_tecno no necesariamente.
-  replace_na(list(monto_tecno = 0, cant_rtec = 0L)) -> db_1
+  replace_na(list(monto_tecno = 0, cant_rtec = 0L))
 
 ```
 
@@ -119,18 +120,24 @@ Luego, calculo las variables que requieren del los totales y marginales.
 
 ```{r}
 
-db_1 %>% 
-  mutate(por_tecno_m = monto_tecno / monto_total * 100,
-         por_tecno = cant_rtec / cant_recargas * 100,
-         cl_tecno = case_when(por_tecno >= 70 ~ "1-Tecno",
-                              por_tecno >= 40 & por_tecno < 70 ~ "2-Mix4070",
-                              por_tecno > 0 & por_tecno < 40 ~ "3-MixH40",
-                              por_tecno == 0 ~ "4-No Tecno",
-                              TRUE ~ "ERROR"),
-         
-         cl_tecno = case_when(cant_recargas >= 3 ~ cl_tecno,
-                              cant_recargas < 3 ~ "99-NOSEGM",
-                              TRUE ~ "ERROR")) -> Clientes_Mar21
+Clientes_Mar21 <-
+  db_1 %>%
+  mutate(
+    por_tecno_m = monto_tecno / monto_total * 100,
+    por_tecno = cant_rtec / cant_recargas * 100,
+    cl_tecno = case_when(
+      por_tecno >= 70 ~ "1-Tecno",
+      por_tecno >= 40 & por_tecno < 70 ~ "2-Mix4070",
+      por_tecno > 0 & por_tecno < 40 ~ "3-MixH40",
+      por_tecno == 0 ~ "4-No Tecno",
+      TRUE ~ "ERROR"
+    ),
+    cl_tecno = case_when(
+      cant_recargas >= 3 ~ cl_tecno,
+      cant_recargas < 3 ~ "99-NOSEGM",
+      TRUE ~ "ERROR"
+    )
+  )
 ```
 
 # db 2
@@ -138,12 +145,16 @@ db_1 %>%
 Calculo los resumenes pedidos.
 
 ```{r}
-Clientes_Mar21 %>% 
-  group_by(cl_tecno) %>% 
-  summarise(monto_total_promedio = mean(monto_total),
-            monto_tecno_promedio = mean(monto_tecno),
-            cant_recargas_promedio = mean(cant_recargas),
-            cant_rec_tecno_promedio = mean(cant_rtec)) -> Segmentacion_Mar21
+
+Segmentacion_Mar21 <-
+  Clientes_Mar21 %>%
+  group_by(cl_tecno) %>%
+  summarise(
+    monto_total_promedio = mean(monto_total),
+    monto_tecno_promedio = mean(monto_tecno),
+    cant_recargas_promedio = mean(cant_recargas),
+    cant_rec_tecno_promedio = mean(cant_rtec)
+  )
 ```
 
 <!-- # graficos -->
