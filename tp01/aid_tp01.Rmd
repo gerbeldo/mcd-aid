@@ -1,10 +1,12 @@
 ---
 title: "AID TP01"
 author: "German Beldorati Stark"
-output: html_notebook
-editor_options: 
+output:
+  html_document:
+    df_print: paged
+editor_options:
   chunk_output_type: console
-  markdown: 
+  markdown:
     wrap: 72
 ---
 
@@ -16,7 +18,7 @@ library(tidyverse)
 
 ## clientes
 
-```{r}
+```{r cache = T, warning=F}
 clientes <- read_csv("data/DNA_03_NEW.csv.bz2") %>% 
   janitor::clean_names()
 ```
@@ -25,7 +27,7 @@ Investigo columna `base_stat_03`, cambiandola a `factor`. Viendo los
 niveles, me saco de encima las filas que no me interesan, lease, las que
 no son "ACTIVE BASE" o "REJOINER"
 
-```{r}
+```{r cache = T}
 clientes %>% mutate(base_stat_03 = factor(base_stat_03)) -> clientes
 
 clientes %>%
@@ -35,7 +37,7 @@ clientes %>%
 
 ## recargas
 
-```{r}
+```{r cache = T, warning = F}
 rec01 <- read_csv("data/RECA_CHAN_01_NEW.csv.bz2")
 rec02 <- read_csv("data/RECA_CHAN_02_NEW.csv.bz2")
 rec03 <- read_csv("data/RECA_CHAN_03_NEW.csv.bz2")
@@ -165,7 +167,7 @@ Segmentacion_Mar21 <-
   )
 ```
 
-# descriptiva y graficos
+# descriptiva
 
 La variable `accs_mthd_cd` no es "numerica" hablando estrictamente, por
 lo que la transformo en factor para que `skim` no calcule estadisticos
@@ -174,6 +176,8 @@ que no tienen sentido.
 ```{r}
 skimr::skim(Clientes_Mar21 %>% mutate(accs_mthd_cd = factor(accs_mthd_cd)))
 ```
+
+# graficos
 
 Primero grafico unos histogramas, para ver las distribuicones de
 regargas y montos en cada nivel de clasificacion.
@@ -239,9 +243,10 @@ los datos con respecto a estas variables.
 ```{r}
 Clientes_Mar21 %>%
   ggplot(aes(cant_recargas, monto_total)) +
-  geom_hex() + scale_fill_viridis_c(trans = "log") +
-  facet_grid(~cl_tecno ) +
-  theme(aspect.ratio = 1)
+  geom_hex() +
+  scale_fill_viridis_c(trans = "log") +
+  facet_grid(~cl_tecno ) #+
+  #theme(aspect.ratio = 1)
 ```
 
 # anexo
