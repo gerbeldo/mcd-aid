@@ -1,5 +1,6 @@
 ---
-title: "AID TP 01"
+title: "AID TP01"
+author: "German Beldorati Stark"
 output: html_notebook
 editor_options: 
   chunk_output_type: console
@@ -172,7 +173,9 @@ en cada nivel de clasificacion.
 
 ```{r}
 Clientes_Mar21 %>%
-  ggplot(aes(cant_recargas)) + geom_histogram(binwidth = 3) + facet_grid(cl_tecno~. , scales = "free")
+  ggplot(aes(cant_recargas)) +
+  geom_histogram(binwidth = 3) +
+  facet_grid(cl_tecno ~ ., scales = "free")
 ```
 
 Las distribuciones de cantidad de recargas en varios casos tienen pinta bimodal. 
@@ -185,12 +188,16 @@ graficar la conjunta directamente, mediante un scatterplot.
 
 ```{r}
 Clientes_Mar21 %>%
-  ggplot(aes(monto_total)) + geom_histogram(binwidth = 10) + facet_grid(cl_tecno~. , scales = "free")
+  ggplot(aes(monto_total)) +
+  geom_histogram(binwidth = 10) +
+  facet_grid(cl_tecno ~ ., scales = "free")
 ```
 
 ```{r}
 Clientes_Mar21 %>%
-  ggplot(aes(monto_total)) + geom_density() + facet_grid(cl_tecno~. , scales = "free")
+  ggplot(aes(monto_total)) +
+  geom_density() +
+  facet_grid(cl_tecno ~ ., scales = "free")
 ```
 
 Luego, grafico un scatterplot, que debido al numero de observaciones tarda mucho,
@@ -236,6 +243,7 @@ clientes_subset <-
   group_by(cl_tecno) %>%
   mutate(n_rows = n()) %>%
   sample_frac(0.3, weight = n_rows) %>%
-  select(-n_rows) %>% ungroup()
+  select(-n_rows) %>%
+  ungroup()
 ```
 
