@@ -158,26 +158,84 @@ Segmentacion_Mar21 <-
 ```
 
 
+# descriptiva y graficos
 
-<!-- # graficos -->
+La variable `accs_mthd_cd` no es "numerica" hablando estrictamente, por lo que la transformo
+en factor para que `skim` no calcule estadisticos que no tienen sentido.
 
-<!-- ```{r} -->
-<!-- Clientes_Mar21 %>%  -->
-<!--   ggplot(aes(cant_recargas)) + geom_histogram() + facet_grid(cl_tecno~. , scales = "free_y") -->
-<!-- ``` -->
+```{r}
+skimr::skim(Clientes_Mar21 %>% mutate(accs_mthd_cd = factor(accs_mthd_cd)))
+```
 
-<!-- ```{r} -->
-<!-- Clientes_Mar21 %>%  -->
-<!--   ggplot(aes(cant_recargas, monto_total, color = cl_tecno)) + -->
-<!--   geom_point(alpha = 0.3) + -->
-<!--   facet_grid(cl_tecno~. ) -->
+Primero grafico unos histogramas, para ver las distribuicones de regargas y montos
+en cada nivel de clasificacion.
 
-<!-- ``` -->
+```{r}
+Clientes_Mar21 %>%
+  ggplot(aes(cant_recargas)) + geom_histogram(binwidth = 3) + facet_grid(cl_tecno~. , scales = "free")
+```
 
-<!-- ```{r} -->
-<!-- Clientes_Mar21 %>%  -->
-<!--   group_by(cl_tecno) %>%  -->
-<!--   mutate(n_rows = n()) %>%  -->
-<!--   sample_frac(0.4, weight = n_rows) -->
-<!-- ``` -->
+Las distribuciones de cantidad de recargas en varios casos tienen pinta bimodal. 
+Una hipotesis es que la gente hace pocas recargas de montos altos, o muchas recargas de montos chicos. 
+
+Al graficar los montos, tambien vemos cierta bimodalidad, lo cual soporta la hipotesis.
+Para estudiarlo con mas detalle podria clasificar en dos, separando a *grosso modo* 
+las dos modas de una de las variables, y graficar la distribucion de la otra. O mas facil,
+graficar la conjunta directamente, mediante un scatterplot.
+
+```{r}
+Clientes_Mar21 %>%
+  ggplot(aes(monto_total)) + geom_histogram(binwidth = 10) + facet_grid(cl_tecno~. , scales = "free")
+```
+
+```{r}
+Clientes_Mar21 %>%
+  ggplot(aes(monto_total)) + geom_density() + facet_grid(cl_tecno~. , scales = "free")
+```
+
+Luego, grafico un scatterplot, que debido al numero de observaciones tarda mucho,
+y esta lleno de overplotting, por mas `alpha` o mas chiquito el tamaño del punto use.
+(probe tambien hacer un subsampleo estratificado, manteniendo las proporciones de
+los grupos, pero tendria que hacerlo con mas detalle. Dejo el codigo en un anexo al final
+para referencia futura.)
+
+```{r}
+Clientes_Mar21 %>%
+  ggplot(aes(cant_recargas, monto_total, color = cl_tecno)) +
+  geom_point(alpha = 0.01, size = 0.1) +
+  facet_grid(~cl_tecno, scale = "free") +
+  theme(aspect.ratio = 1, legend.position = "none")
+```
+
+Una forma de "limpiar" los scatterplots es usando `geom_hex`, que basicamente grafica
+la frecuencia de regiones hexagonales, mappeando el numero de observaciones dentro 
+de la region al color.
+
+Ademas, como el rango de observaciones es muy amplio (hay zonas muy concentradas
+en observaciones y otras practicamente vacias), transformo logaritmicamente las 
+frecuencias para asi poder observar un gradiente en las frecuencias.
+
+En otras palabras, esto basicamente grafica la distribucion conjunta de los datos
+con respecto a estas variables.
+
+```{r}
+Clientes_Mar21 %>%
+  ggplot(aes(cant_recargas, monto_total)) +
+  geom_hex() + scale_fill_viridis_c(trans = "log") +
+  facet_grid(~cl_tecno ) +
+  theme(aspect.ratio = 1)
+```
+
+# anexo
+
+## stratified subsampling
+
+```{r eval = F}
+clientes_subset <-
+  Clientes_Mar21 %>%
+  group_by(cl_tecno) %>%
+  mutate(n_rows = n()) %>%
+  sample_frac(0.3, weight = n_rows) %>%
+  select(-n_rows) %>% ungroup()
+```
 
