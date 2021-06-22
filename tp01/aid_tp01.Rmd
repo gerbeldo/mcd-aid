@@ -4,6 +4,11 @@ author: "German Beldorati Stark"
 output:
   html_document:
     df_print: paged
+    highlight: kate
+    theme:
+      version: 4
+      code_font: 
+        google: JetBrains Mono
 editor_options:
   chunk_output_type: console
   markdown:
@@ -65,7 +70,7 @@ limpio_recargas <- function(x) {
 Aplico la funcion de limpieza y uno los dataframes de recargas en uno
 solo.
 
-```{r}
+```{r cache = T}
 list(rec01, rec02, rec03) %>% 
   map(limpio_recargas) %>% 
   reduce(bind_rows) -> recargas
@@ -99,7 +104,7 @@ preservando a todos los clientes, independientemente del tipo de
 recarga.) y reemplazo los NA (que aparecen en caso de no haber realizado
 cargas por medios tecnologicos) por ceros. Almaceno todo en `db_1`.
 
-```{r}
+```{r cache = T}
 
 db_total <-
   db %>%
@@ -220,11 +225,11 @@ estratificado, manteniendo las proporciones de los grupos, pero tendria
 que hacerlo con mas detalle. Dejo el codigo en un anexo al final para
 referencia futura.)
 
-```{r}
+```{r cache = T}
 Clientes_Mar21 %>%
   ggplot(aes(cant_recargas, monto_total, color = cl_tecno)) +
   geom_point(alpha = 0.01, size = 0.1) +
-  facet_grid(~cl_tecno, scale = "free") +
+  facet_wrap(~cl_tecno, scale = "free") +
   theme(aspect.ratio = 1, legend.position = "none")
 ```
 
@@ -245,12 +250,16 @@ Clientes_Mar21 %>%
   ggplot(aes(cant_recargas, monto_total)) +
   geom_hex() +
   scale_fill_viridis_c(trans = "log") +
-  facet_grid(~cl_tecno ) #+
-  #theme(aspect.ratio = 1)
+  facet_wrap(~cl_tecno) +
+  theme(aspect.ratio = 1)
+  
 ```
 
-# anexo
+Lo que podemos ver es que en el segmento 1 hay una mayor cantidad de datos en la
+region correspondiente a poca cantidad de recargas y montos altos, mientras que 
+en el 4 no, la nube tiende esta mas desplazada hacia abajo (montos menore)
 
+# anexo
 ## stratified subsampling
 
 ```{r eval = F}
