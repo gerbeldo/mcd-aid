@@ -17,6 +17,7 @@ editor_options:
 
 ```{r}
 library(tidyverse)
+theme_set(theme_classic())
 ```
 
 # load + wrangling
@@ -155,6 +156,15 @@ Clientes_Mar21 <-
   )
 ```
 
+Finalmente agrego la columna `base_stat_03`, que se perdio en un `summarise`.
+
+```{r}
+Clientes_Mar21 <- 
+  Clientes_Mar21 %>%
+    inner_join(clientes, by = "accs_mthd_cd")
+```
+
+
 # Segmentacion_Mar21
 
 Calculo los resumenes pedidos.
@@ -190,7 +200,7 @@ regargas y montos en cada nivel de clasificacion.
 ```{r}
 Clientes_Mar21 %>%
   ggplot(aes(cant_recargas)) +
-  geom_histogram(binwidth = 3) +
+  geom_histogram(binwidth = 1) +
   facet_grid(cl_tecno ~ ., scales = "free")
 ```
 
@@ -210,6 +220,9 @@ Clientes_Mar21 %>%
   geom_histogram(binwidth = 10) +
   facet_grid(cl_tecno ~ ., scales = "free")
 ```
+
+Como monto total es una variable en principio continua (a diferencia de cantidad de recargas),
+es correcto realizar un grafico de densidades
 
 ```{r}
 Clientes_Mar21 %>%
@@ -271,3 +284,22 @@ clientes_subset <-
   select(-n_rows) %>%
   ungroup()
 ```
+
+## tablas output
+
+Cambio capitalizacion de los nombres de variables y ordeno por id de cliente, para
+igualar a lo pedido en el TP. Exporto las tablas a csv.
+
+```{r eval = F}
+
+names(Clientes_Mar21) <- str_to_upper(names(Clientes_Mar21))
+
+Clientes_Mar21 %>%
+  relocate(BASE_STAT_03, .after = ACCS_MTHD_CD) %>%
+  arrange(ACCS_MTHD_CD) %>% 
+  write_csv("tabla1_clientes.csv")
+
+Segmentacion_Mar21 %>% write_csv("tabla2_segmentacion.csv")
+
+```
+
