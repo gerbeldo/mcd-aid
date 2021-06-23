@@ -94,7 +94,7 @@ db <- clientes %>%
 Elimino tablas simples para ahorrar memoria.
 
 ```{r}
-rm(list = c(ls(pattern = "rec\\d"), "clientes", "recargas"))
+rm(list = c(ls(pattern = "rec\\d"), "recargas"))
 ```
 
 # Clientes_Mar21
@@ -103,7 +103,7 @@ Calculo valores totales en tabla `db_total` y unicamente las
 tecnologicas en `db_tecno`. Luego las uno (mediante un `left_join`,
 preservando a todos los clientes, independientemente del tipo de
 recarga.) y reemplazo los NA (que aparecen en caso de no haber realizado
-cargas por medios tecnologicos) por ceros. Almaceno todo en `db_1`.
+cargas por medios tecnologicos) por ceros. Almaceno todo en `db_joined`.
 
 ```{r cache = T}
 
@@ -124,7 +124,7 @@ db_tecno <-
     cant_rtec = n()
   )
 
-db_1 <-
+db_joined <-
   db_total %>%
   left_join(db_tecno, by = "accs_mthd_cd") %>%
   # cantidad de regargas seguro es int, monto_tecno no necesariamente.
@@ -137,7 +137,7 @@ Luego, calculo las variables que requieren del los totales y marginales.
 ```{r}
 
 Clientes_Mar21 <-
-  db_1 %>%
+  db_joined %>%
   mutate(
     por_tecno_m = monto_tecno / monto_total * 100,
     por_tecno = cant_rtec / cant_recargas * 100,
@@ -162,6 +162,9 @@ Finalmente agrego la columna `base_stat_03`, que se perdio en un `summarise`.
 Clientes_Mar21 <- 
   Clientes_Mar21 %>%
     inner_join(clientes, by = "accs_mthd_cd")
+
+rm(clientes)
+
 ```
 
 
@@ -195,7 +198,10 @@ skimr::skim(Clientes_Mar21 %>% mutate(accs_mthd_cd = factor(accs_mthd_cd)))
 # graficos
 
 Primero grafico unos histogramas, para ver las distribuicones de
-regargas y montos en cada nivel de clasificacion.
+regargas y montos en cada nivel de clasificacion. En todos los casos, se observa
+la presencia de outliers. En los histogramas en particular se nota por la escala
+del grafico, lo cual indica la presencia de valores extremos, pero luego se ve mejor
+en los graficos de dispersion.
 
 ```{r}
 Clientes_Mar21 %>%
@@ -221,8 +227,8 @@ Clientes_Mar21 %>%
   facet_grid(cl_tecno ~ ., scales = "free")
 ```
 
-Como monto total es una variable en principio continua (a diferencia de cantidad de recargas),
-es correcto realizar un grafico de densidades
+Puedo visualizar con un grafico de densidades tambien, ya que monto_total es una 
+variable en principio continua, y tenemos bastantes observaciones.
 
 ```{r}
 Clientes_Mar21 %>%
@@ -241,7 +247,7 @@ referencia futura.)
 ```{r cache = T}
 Clientes_Mar21 %>%
   ggplot(aes(cant_recargas, monto_total, color = cl_tecno)) +
-  geom_point(alpha = 0.01, size = 0.1) +
+  geom_point(alpha = 0.1, size = 0.31) +
   facet_wrap(~cl_tecno, scale = "free") +
   theme(aspect.ratio = 1, legend.position = "none")
 ```
@@ -285,7 +291,7 @@ clientes_subset <-
   ungroup()
 ```
 
-## tablas output
+## exportar tablas 
 
 Cambio capitalizacion de los nombres de variables y ordeno por id de cliente, para
 igualar a lo pedido en el TP. Exporto las tablas a csv.
