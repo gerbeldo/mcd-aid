@@ -197,6 +197,8 @@ skimr::skim(Clientes_Mar21 %>% mutate(accs_mthd_cd = factor(accs_mthd_cd)))
 
 # graficos
 
+## segmentacion
+
 Primero grafico unos histogramas, para ver las distribuicones de
 regargas y montos en cada nivel de clasificacion. En todos los casos, se observa
 la presencia de outliers. En los histogramas en particular se nota por la escala
@@ -214,17 +216,32 @@ Las distribuciones de cantidad de recargas en varios casos tienen pinta
 bimodal. Una hipotesis es que la gente hace pocas recargas de montos
 altos, o muchas recargas de montos chicos.
 
+Filtrando la cantidad de recargas a menos de 75 perdemos unicamente 80 datos, y 
+se ve mejor la pinta de las distribuciones.
+
+```{r}
+Clientes_Mar21 %>%
+  ggplot(aes(cant_recargas)) +
+  geom_histogram(binwidth = 1) +
+  facet_grid(cl_tecno ~ ., scales = "free") +
+  xlim(c(0, 75))
+```
+
 Al graficar los montos, tambien vemos cierta bimodalidad, lo cual
 soporta la hipotesis. Para estudiarlo con mas detalle podria clasificar
 en dos, separando a *grosso modo* las dos modas de una de las variables,
 y graficar la distribucion de la otra. O mas facil, graficar la conjunta
 directamente, mediante un scatterplot.
 
+
 ```{r}
+
+# en este caso, filtrando el monto total a menores de 300 perdemos ~250 datos unicamente.
 Clientes_Mar21 %>%
   ggplot(aes(monto_total)) +
-  geom_histogram(binwidth = 10) +
-  facet_grid(cl_tecno ~ ., scales = "free")
+  geom_histogram(binwidth = 5) +
+  facet_grid(cl_tecno ~ ., scales = "free") +
+  xlim(c(0, 300))
 ```
 
 Puedo visualizar con un grafico de densidades tambien, ya que monto_total es una 
@@ -234,7 +251,8 @@ variable en principio continua, y tenemos bastantes observaciones.
 Clientes_Mar21 %>%
   ggplot(aes(monto_total)) +
   geom_density() +
-  facet_grid(cl_tecno ~ ., scales = "free")
+  facet_grid(cl_tecno ~ ., scales = "free") +
+  xlim(c(0, 300))
 ```
 
 Luego, grafico un scatterplot, que debido al numero de observaciones
@@ -278,6 +296,31 @@ Lo que podemos ver es que en el segmento 1 hay una mayor cantidad de datos en la
 region correspondiente a poca cantidad de recargas y montos altos, mientras que 
 en el 4 no, la nube tiende esta mas desplazada hacia abajo (montos menores).
 
+## tipo de cliente
+
+Luego, explorando la clasificacion por `base_stat_03`, vemos que son muy pocos
+los clientes "REJOINNER". Y ademas, no son la subpoblacion que nos genera la bimodalidad.
+
+```{r}
+Clientes_Mar21 %>% 
+  #filter(base_stat_03 == "REJOINNER") %>% 
+  ggplot(aes(monto_total, fill = base_stat_03)) +
+  geom_histogram(binwidth = 5) +
+  facet_grid(base_stat_03~., scale = "free") +
+  xlim(c(0, 300))
+```
+
+El grafico de densidades es ruidoso, probablemente porque monto total no es
+estrictamente continuo en este dataset. Mas aun, tiene `r length(unique(Clientes_Mar21$monto_total))` valores posibles.
+
+```{r}
+Clientes_Mar21 %>% 
+  #filter(base_stat_03 == "REJOINNER") %>% 
+  ggplot(aes(monto_total, fill = base_stat_03)) +
+  geom_density() +
+  facet_grid(base_stat_03~., scale = "free") +
+  xlim(c(0, 300))
+```
 
 
 # anexo
