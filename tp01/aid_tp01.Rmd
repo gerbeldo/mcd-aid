@@ -276,7 +276,9 @@ Clientes_Mar21 %>%
 
 Lo que podemos ver es que en el segmento 1 hay una mayor cantidad de datos en la
 region correspondiente a poca cantidad de recargas y montos altos, mientras que 
-en el 4 no, la nube tiende esta mas desplazada hacia abajo (montos menore)
+en el 4 no, la nube tiende esta mas desplazada hacia abajo (montos menores).
+
+
 
 # anexo
 ## stratified subsampling
