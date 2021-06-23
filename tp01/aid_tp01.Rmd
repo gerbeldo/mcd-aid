@@ -49,9 +49,9 @@ rec02 <- read_csv("data/RECA_CHAN_02_NEW.csv.bz2")
 rec03 <- read_csv("data/RECA_CHAN_03_NEW.csv.bz2")
 ```
 
-Defino una funcion de limpieza para las bases correspondientes a enero,
+Defino una función de limpieza para las bases correspondientes a enero,
 febrero y marzo. Limpia los nombres, y genera las columnas nuevas
-necesarias para el posterior analisis.
+necesarias para el posterior análisis.
 
 ```{r}
 limpio_recargas <- function(x) {
@@ -68,7 +68,7 @@ limpio_recargas <- function(x) {
 }
 ```
 
-Aplico la funcion de limpieza y uno los dataframes de recargas en uno
+Aplico la función de limpieza y uno los dataframes de recargas en uno
 solo.
 
 ```{r cache = T}
@@ -80,7 +80,7 @@ list(rec01, rec02, rec03) %>%
 ## joining
 
 Uno las tablas `recarga` y `clientes`, mediante un inner join, ya que no
-me interesan los clientes para los cuales no tengo informacion de
+me interesan los clientes para los cuales no tengo información de
 recargas, ni las recargas de clientes que no tengan `base_stat_03` ==
 REJOINNER o ACTIVE BASE.
 
@@ -100,10 +100,10 @@ rm(list = c(ls(pattern = "rec\\d"), "recargas"))
 # Clientes_Mar21
 
 Calculo valores totales en tabla `db_total` y unicamente las
-tecnologicas en `db_tecno`. Luego las uno (mediante un `left_join`,
+tecnológicas en `db_tecno`. Luego las uno (mediante un `left_join`,
 preservando a todos los clientes, independientemente del tipo de
-recarga.) y reemplazo los NA (que aparecen en caso de no haber realizado
-cargas por medios tecnologicos) por ceros. Almaceno todo en `db_joined`.
+recarga) y reemplazo los NA (que aparecen en caso de no haber realizado
+cargas por medios tecnológicos) por ceros. Almaceno todo en `db_joined`.
 
 ```{r cache = T}
 
@@ -132,7 +132,7 @@ db_joined <-
 
 ```
 
-Luego, calculo las variables que requieren del los totales y marginales.
+Luego, calculo las variables que requieren de los totales y marginales.
 
 ```{r}
 
@@ -156,7 +156,7 @@ Clientes_Mar21 <-
   )
 ```
 
-Finalmente agrego la columna `base_stat_03`, que se perdio en un `summarise`.
+Finalmente agrego la columna `base_stat_03`, que se perdió en un `summarise`.
 
 ```{r}
 Clientes_Mar21 <- 
@@ -170,7 +170,7 @@ rm(clientes)
 
 # Segmentacion_Mar21
 
-Calculo los resumenes pedidos.
+Calculo los resúmenes pedidos.
 
 ```{r}
 
@@ -187,8 +187,8 @@ Segmentacion_Mar21 <-
 
 # descriptiva
 
-La variable `accs_mthd_cd` no es "numerica" hablando estrictamente, por
-lo que la transformo en factor para que `skim` no calcule estadisticos
+La variable `accs_mthd_cd` no es "numérica" hablando estrictamente, por
+lo que la transformo en factor para que `skim` no calcule estadísticos
 que no tienen sentido.
 
 ```{r}
@@ -199,11 +199,11 @@ skimr::skim(Clientes_Mar21 %>% mutate(accs_mthd_cd = factor(accs_mthd_cd)))
 
 ## segmentacion
 
-Primero grafico unos histogramas, para ver las distribuicones de
-regargas y montos en cada nivel de clasificacion. En todos los casos, se observa
-la presencia de outliers. En los histogramas en particular se nota por la escala
-del grafico, lo cual indica la presencia de valores extremos, pero luego se ve mejor
-en los graficos de dispersion.
+Primero grafico unos histogramas, para ver las distribuciones de regargas y montos
+en cada nivel de clasificación. En todos los casos, se observa la presencia de outliers:
+tanto en las medidas de descriptiva (los cuantiles en particular), como también en los
+histogramas (se nota por la escala del gráfico, pero luego se ve mejor en los
+gráficos de dispersión).
 
 ```{r}
 Clientes_Mar21 %>%
@@ -213,7 +213,7 @@ Clientes_Mar21 %>%
 ```
 
 Las distribuciones de cantidad de recargas en varios casos tienen pinta
-bimodal. Una hipotesis es que la gente hace pocas recargas de montos
+bimodal. Una hipótesis es que la gente hace pocas recargas de montos
 altos, o muchas recargas de montos chicos.
 
 Filtrando la cantidad de recargas a menos de 75 perdemos unicamente 80 datos, y 
@@ -227,15 +227,14 @@ Clientes_Mar21 %>%
   xlim(c(0, 75))
 ```
 
-Al graficar los montos, tambien vemos cierta bimodalidad, lo cual
-soporta la hipotesis. Para estudiarlo con mas detalle podria clasificar
+Al graficar los montos, también vemos cierta bimodalidad, lo cual
+soporta la hipótesis. Para estudiarlo con mas detalle podria clasificar
 en dos, separando a *grosso modo* las dos modas de una de las variables,
-y graficar la distribucion de la otra. O mas facil, graficar la conjunta
+y graficar la distribución de la otra. O más fácil, graficar la conjunta
 directamente, mediante un scatterplot.
 
 
 ```{r}
-
 # en este caso, filtrando el monto total a menores de 300 perdemos ~250 datos unicamente.
 Clientes_Mar21 %>%
   ggplot(aes(monto_total)) +
@@ -244,8 +243,8 @@ Clientes_Mar21 %>%
   xlim(c(0, 300))
 ```
 
-Puedo visualizar con un grafico de densidades tambien, ya que monto_total es una 
-variable en principio continua, y tenemos bastantes observaciones.
+Puedo visualizar con un gráfico de densidades también, ya que monto_total es una 
+variable en principio contínua, y tenemos bastantes observaciones.
 
 ```{r}
 Clientes_Mar21 %>%
@@ -257,9 +256,9 @@ Clientes_Mar21 %>%
 
 Luego, grafico un scatterplot, que debido al numero de observaciones
 tarda mucho, y esta lleno de overplotting, por mas `alpha` o mas
-chiquito el tamaño del punto use. (probe tambien hacer un subsampleo
+chiquito el tamaño del punto use. (probé tambien hacer un subsampleo
 estratificado, manteniendo las proporciones de los grupos, pero tendria
-que hacerlo con mas detalle. Dejo el codigo en un anexo al final para
+que hacerlo con más detalle. Dejo el codigo en un anexo al final para
 referencia futura.)
 
 ```{r cache = T}
@@ -271,15 +270,15 @@ Clientes_Mar21 %>%
 ```
 
 Una forma de "limpiar" los scatterplots es usando `geom_hex`, que
-basicamente grafica la frecuencia de regiones hexagonales, mappeando el
-numero de observaciones dentro de la region al color.
+básicamente grafica la frecuencia de regiones hexagonales, mappeando el
+numero de observaciones dentro de la region al estético "color".
 
-Ademas, como el rango de observaciones es muy amplio (hay zonas muy
-concentradas en observaciones y otras practicamente vacias), transformo
-logaritmicamente las frecuencias para asi poder observar un gradiente en
+Además, como el rango de observaciones es muy amplio (hay zonas muy
+concentradas en observaciones y otras prácticamente vacias), transformo
+logarítmicamente las frecuencias para asi poder observar un gradiente en
 las frecuencias.
 
-En otras palabras, esto basicamente grafica la distribucion conjunta de
+En otras palabras, esto básicamente grafica la distribucion conjunta de
 los datos con respecto a estas variables.
 
 ```{r}
@@ -298,8 +297,8 @@ en el 4 no, la nube tiende esta mas desplazada hacia abajo (montos menores).
 
 ## tipo de cliente
 
-Luego, explorando la clasificacion por `base_stat_03`, vemos que son muy pocos
-los clientes "REJOINNER". Y ademas, no son la subpoblacion que nos genera la bimodalidad.
+Luego, explorando la clasificación por `base_stat_03`, vemos que son muy pocos
+los clientes "REJOINNER". Y además, no son la subpoblación que nos genera la bimodalidad.
 
 ```{r}
 Clientes_Mar21 %>% 
@@ -310,8 +309,8 @@ Clientes_Mar21 %>%
   xlim(c(0, 300))
 ```
 
-El grafico de densidades es ruidoso, probablemente porque monto total no es
-estrictamente continuo en este dataset. Mas aun, tiene `r length(unique(Clientes_Mar21$monto_total))` valores posibles.
+El gráfico de densidades es ruidoso, probablemente porque monto total no es
+estrictamente continuo en este dataset. Más aún, tiene sólo `r length(unique(Clientes_Mar21$monto_total))` valores posibles.
 
 ```{r}
 Clientes_Mar21 %>% 
@@ -338,7 +337,7 @@ clientes_subset <-
 
 ## exportar tablas 
 
-Cambio capitalizacion de los nombres de variables y ordeno por id de cliente, para
+Cambio capitalización de los nombres de variables y ordeno por id de cliente, para
 igualar a lo pedido en el TP. Exporto las tablas a csv.
 
 ```{r eval = F}
