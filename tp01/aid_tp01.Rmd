@@ -84,6 +84,14 @@ me interesan los clientes para los cuales no tengo información de
 recargas, ni las recargas de clientes que no tengan `base_stat_03` ==
 REJOINNER o ACTIVE BASE.
 
+NOTA: Tiempo despues de hacer esto, me entere por compañerxs que habia que preservar
+los datos de los clientes que no hicieron recargas. Para esto, en vez de un inner,
+bastaria hacer un outer join (left, manteniendo el orden de las tablas como esta.).
+Todas estas observaciones caerian en la clase "99-NOSEGM", dado que su cantidad de 
+recargas seria cero. Si bien dudo que se modifiquen las observaciones que siguen, 
+por cuestiones de tiempo elijo entregar la version original en el script, pero 
+adjuntar la tabla correcta, con el codigo para generarla en el anexo.
+
 ```{r}
 db <- clientes %>% 
   inner_join(recargas, by = c("accs_mthd_cd" = "customerid"))
@@ -323,6 +331,66 @@ Clientes_Mar21 %>%
 
 
 # anexo
+
+## Tabla clientes correcta
+
+```{r eval = F}
+db <- clientes %>% 
+  left_join(recargas, by = c("accs_mthd_cd" = "customerid"))
+
+db_total <-
+  db %>%
+  group_by(accs_mthd_cd) %>%
+  summarise(
+    # reemplazo los NA por cero, gente que no recargo nunca
+    monto_total = sum(replace_na(purchaseamount, 0)),
+    # primero cuento las filas para la cantidad de recargas
+    cant_recargas = n(),
+    # luego reemplazo las que corresponden a gente que no cargo.
+    cant_recargas = if_else(is.na(channel_type), 0L, cant_recargas)
+  )
+
+db_tecno <-
+  db %>%
+  filter(channel_type == "tecno") %>%
+  group_by(accs_mthd_cd) %>%
+  summarise(
+    monto_tecno = sum(purchaseamount),
+    cant_rtec = n()
+  )
+
+db_joined <-
+  db_total %>%
+  left_join(db_tecno, by = "accs_mthd_cd") %>%
+  # cantidad de regargas seguro es int, monto_tecno no necesariamente.
+  replace_na(list(monto_tecno = 0, cant_rtec = 0L)) %>% unique()
+
+Clientes_Mar21_real <-
+  db_joined %>%
+  mutate(
+    por_tecno_m = if_else(monto_total != 0, monto_tecno / monto_total * 100, 0),
+    por_tecno = if_else(cant_recargas != 0, cant_rtec / cant_recargas * 100, 0),
+    cl_tecno = case_when(
+      por_tecno >= 70 ~ "1-Tecno",
+      por_tecno >= 40 & por_tecno < 70 ~ "2-Mix4070",
+      por_tecno > 0 & por_tecno < 40 ~ "3-MixH40",
+      por_tecno == 0 ~ "4-No Tecno",
+      TRUE ~ "ERROR"
+    ),
+    cl_tecno = case_when(
+      cant_recargas >= 3 ~ cl_tecno,
+      cant_recargas < 3 ~ "99-NOSEGM",
+      TRUE ~ "ERROR"
+    )
+  )
+
+Clientes_Mar21_real <- 
+  Clientes_Mar21_real %>%
+    inner_join(clientes, by = "accs_mthd_cd")
+
+```
+
+
 ## stratified subsampling
 
 ```{r eval = F}
@@ -335,6 +403,7 @@ clientes_subset <-
   ungroup()
 ```
 
+
 ## exportar tablas 
 
 Cambio capitalización de los nombres de variables y ordeno por id de cliente, para
@@ -342,12 +411,12 @@ igualar a lo pedido en el TP. Exporto las tablas a csv.
 
 ```{r eval = F}
 
-names(Clientes_Mar21) <- str_to_upper(names(Clientes_Mar21))
+names(Clientes_Mar21_real) <- str_to_upper(names(Clientes_Mar21_real))
 
-Clientes_Mar21 %>%
+Clientes_Mar21_real %>%
   relocate(BASE_STAT_03, .after = ACCS_MTHD_CD) %>%
   arrange(ACCS_MTHD_CD) %>% 
-  write_csv("tabla1_clientes.csv")
+  write_csv("tabla1_clientes.csv.bz2")
 
 Segmentacion_Mar21 %>% write_csv("tabla2_segmentacion.csv")
 
