@@ -329,7 +329,6 @@ Clientes_Mar21 %>%
   xlim(c(0, 300))
 ```
 
-
 # anexo
 
 ## Tabla clientes correcta
