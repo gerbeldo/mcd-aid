@@ -1,0 +1,21 @@
+---
+title: "AID TP02"
+author: "German Beldorati Stark"
+output:
+  html_document:
+    df_print: paged
+    highlight: kate
+    theme:
+      version: 4
+      code_font: 
+        google: JetBrains Mono
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: 72
+---
+
+```{r}
+library(tidyverse)
+```
+
