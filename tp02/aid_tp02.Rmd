@@ -19,3 +19,38 @@ editor_options:
 library(tidyverse)
 ```
 
+# cargo datos
+
+Transformo la variable `id` en un `factor` porque no es numérica realmente. Transformo
+las variables `character` en `factor` manualmente, ya que `readxl::read_excel` 
+no tiene argumento `stringAsFactors`.
+
+Estas transformaciones las hago porque tiene más sentido la descriptiva sobre factores.
+En todos los casos las variables pueden tomar uno de un conjunto finito de niveles.
+
+```{r}
+d <- readxl::read_excel("dataset.xls",) %>% janitor::clean_names() %>%
+  mutate(across(where(is.character), factor),
+         id = factor(id))
+```
+
+# Tipos de variables
+
+Categóricas: `r d %>% select(where(is.character) | where(is.factor)) %>% names()`
+
+Cuantitativas: `r d %>% select(where(is.numeric), -id) %>% names()`
+
+# descriptiva
+
+En las variables categóricas vemos que no tenemos ningún `NA`, lo cual es bueno.
+Sólo tenemos un problema en la variable `tiene_pin`, que debería ser SI/NO, pero hay
+una tercera opción, "2", con 65 observaciones. El resto de las variables tienen buena
+pinta a orden cero.
+
+En la variables cuantitativas, la variable `edad` tiene al menos un _outlier_, de 900 años, y lo mismo para la variable antiguedad, con 337. Luego en la variable `consumo_tc` tenemos al menos un _outlier_: un consumo del orden de 10^9, lo cual probablemente no tenga sentido. La columna `mov90_cta` tiene un máximo bastante mas alto que la media, pero en principio podría ser una cuenta muy utilizada (comercial, por ejemplo). Por último, en la columna `sueldos` tenemos muchas observaciones faltantes, con 13298 `NA`.
+
+
+```{r}
+d %>% skimr::skim()
+```
+
