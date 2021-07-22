@@ -17,6 +17,7 @@ editor_options:
 
 ```{r}
 library(tidyverse)
+theme_set(theme_classic())
 ```
 
 # cargo datos
@@ -31,7 +32,8 @@ En todos los casos las variables pueden tomar uno de un conjunto finito de nivel
 ```{r}
 d <- readxl::read_excel("dataset.xls",) %>% janitor::clean_names() %>%
   mutate(across(where(is.character), factor),
-         id = factor(id))
+         id = factor(id),
+         color = factor(color, levels = c("ROJO", "VERDE", "AZUL", "VIOLETA")))
 ```
 
 # Tipos de variables
@@ -53,4 +55,68 @@ En la variables cuantitativas, la variable `edad` tiene al menos un _outlier_, d
 ```{r}
 d %>% skimr::skim()
 ```
+
+# biplots
+
+Primero hago un gráfico con todas las combinaciones, y coloreando según el la variable
+`color`. Esta figura, asi como está, no es muy informativa, ya que es muy difícil de interpretar, 
+por lo que más abajo la vamos a ir partiendo.
+
+```{r}
+d %>% select(-id) %>%  GGally::ggpairs(aes(color = color))
+```
+
+Por un lado graficamos las variables cuantitativas:
+
+```{r}
+d %>% select(where(is.numeric)) %>% GGally::ggpairs()
+```
+
+En la columna correcpondiente a edad vemos claramente un grupo de observaciones muy extremas.
+Podemos graficarlo como boxplot, separando por color, para facilitar la visualización. 
+Vemos que hay _outliers_ de edades en todas las categorías. 
+
+Asumiendo que se tratan de personas físicas, y dado que la persona mas longeva en 
+Argentina tiene apenas [114 años](https://gerontology.wikia.org/wiki/List_of_oldest_people_from_Argentina),
+usamos  ese número como _cutoff_, y eliminamos las observaciones superiores. 
+Probablemente  sea una sobreestimación, pero prefiero una aproximación conservadora.
+
+```{r}
+d %>% ggplot(aes(color, edad, color = color)) +
+  geom_boxplot() +
+  scale_y_continuous(n.breaks = 10)
+
+d %>% filter(edad <= 114) -> d
+```
+
+Grafico las cuantitativas nuevamente y vemos que la columna de edad está mas linda.
+
+```{r}
+d %>% select(where(is.numeric)) %>% GGally::ggpairs()
+```
+
+Con respecto a antiguedad, vemos que hay un subgrupo muy separado de los otros (por
+sobre los 300 meses). Grafico en boxplot, separando por color y graficando los outliers
+independientemente, con un poco de jitter, para tener una idea de que pasa. 
+
+En las cuatro clases hay una concentracion de antiguedades alrededor de los 284 meses y otra a los 337,
+lo cual de minima es llamativo.
+
+```{r}
+
+jitter_outliers <- function(data, group, var) {
+  group_by(data, {{group}}) %>% 
+  filter({{var}} > quantile({{var}}, .75) + 1.5 * IQR({{var}}))
+}
+
+d %>% ggplot(aes(color, antiguedad, color = color)) +
+  geom_point(aes(alpha = I(antiguedad) / 1000), position = "jitter", color = "gray" ) + 
+  geom_boxplot(outlier.shape = NA, alpha = 0) +
+  geom_hline(yintercept = 284, linetype = "dashed", alpha = 0.3) +
+  geom_hline(yintercept = 337, linetype = "dashed", alpha = 0.3) +
+  #geom_point(data = jitter_outliers(d, color, antiguedad), position = "jitter", alpha = 0.5) +
+  scale_y_continuous(n.breaks = 10)
+  
+```
+
 
