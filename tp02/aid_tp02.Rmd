@@ -103,18 +103,11 @@ En las cuatro clases hay una concentracion de antiguedades alrededor de los 284 
 lo cual de minima es llamativo.
 
 ```{r}
-
-jitter_outliers <- function(data, group, var) {
-  group_by(data, {{group}}) %>% 
-  filter({{var}} > quantile({{var}}, .75) + 1.5 * IQR({{var}}))
-}
-
 d %>% ggplot(aes(color, antiguedad, color = color)) +
   geom_point(aes(alpha = I(antiguedad) / 1000), position = "jitter", color = "gray" ) + 
   geom_boxplot(outlier.shape = NA, alpha = 0) +
   geom_hline(yintercept = 284, linetype = "dashed", alpha = 0.3) +
   geom_hline(yintercept = 337, linetype = "dashed", alpha = 0.3) +
-  #geom_point(data = jitter_outliers(d, color, antiguedad), position = "jitter", alpha = 0.5) +
   scale_y_continuous(n.breaks = 10)
   
 ```
