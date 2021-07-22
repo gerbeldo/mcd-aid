@@ -63,8 +63,10 @@ Primero hago un gráfico con todas las combinaciones, y coloreando según el la 
 por lo que más abajo la vamos a ir partiendo.
 
 ```{r}
-d %>% select(-id) %>%  GGally::ggpairs(aes(color = color))
+d %>% select(-id) %>%  GGally::ggpairs(aes(color = color), showStrips = T)
 ```
+
+## cuantitativas
 
 Por un lado graficamos las variables cuantitativas:
 
@@ -100,16 +102,41 @@ sobre los 300 meses). Grafico en boxplot, separando por color y graficando los o
 independientemente, con un poco de jitter, para tener una idea de que pasa. 
 
 En las cuatro clases hay una concentracion de antiguedades alrededor de los 284 meses y otra a los 337,
-lo cual de minima es llamativo.
+lo cual de mínima es llamativo. Un hipótesis es que tengamos un faltante de datos con antiguedades
+entre 284 y 337. Hipotetizando más aún, quizá esas antiguedades intermedias fueron
+colapsadas en 284 y 337.
 
 ```{r}
 d %>% ggplot(aes(color, antiguedad, color = color)) +
-  geom_point(aes(alpha = I(antiguedad) / 1000), position = "jitter", color = "gray" ) + 
+  geom_point(aes(alpha = I(antiguedad) / 700), position = "jitter", color = "gray" ) + 
   geom_boxplot(outlier.shape = NA, alpha = 0) +
   geom_hline(yintercept = 284, linetype = "dashed", alpha = 0.3) +
   geom_hline(yintercept = 337, linetype = "dashed", alpha = 0.3) +
   scale_y_continuous(n.breaks = 10)
-  
+```
+
+
+## categoricas
+
+Como mencionamos antes, la variable `tiene_pin` tiene un nivel extra incorrecto.
+Lo elimino para simplificar el gráfico (son sólo 65 observaciones, en 18000).
+
+```{r}
+d %>%
+  select(where(is.factor), -id) %>% 
+  filter(tiene_pin != 2) %>% 
+  GGally::ggpairs(aes(color = color), showStrips = T)
+```
+
+Graficando ese grupo por separado, contra todas las cuantitativas, vemos que el unico
+detalle notable es que todos los casos corresponden a cuentas cuyos sueldos no están
+en la base de datos. Pero notable hasta ahí, porque esa columna tiene un 26% de _complete_rate_.
+
+```{r}
+d %>%
+  select(where(is.numeric), tiene_pin) %>%
+  filter(tiene_pin == 2) %>%
+  GGally::ggpairs()
 ```
 
 
