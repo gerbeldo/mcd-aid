@@ -115,6 +115,20 @@ d %>% ggplot(aes(color, antiguedad, color = color)) +
   scale_y_continuous(n.breaks = 10)
 ```
 
+Con respecto a la variable `consumo_tc`, aproximadamente la mitad de los clientes
+en la base no usaron la tarjeta en el mes de análisis (o al menos no está reportado).
+Para el resto, transformo logaritmicamente para facilitar la visualizacion de las
+distribuciones en un boxplot, de nuevo separado por colores. Ademas, grafico los datos encima.
+Vemos que el alto consumo de tarjeta no era un _outlier_! Quizá los numeros enormes
+puedan explicarse por la unidad usada, que desconocemos.
+
+```{r}
+filter(d, consumo_tc > 0) %>% ggplot(aes(color, consumo_tc)) + 
+  geom_point(aes(alpha = I(log(consumo_tc)) / 50), position = "jitter", color = "gray") + 
+  geom_boxplot(alpha = 0) +
+  scale_y_log10()
+```
+
 
 ## categoricas
 
