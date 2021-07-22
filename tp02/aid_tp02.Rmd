@@ -122,6 +122,9 @@ distribuciones en un boxplot, de nuevo separado por colores. Ademas, grafico los
 Vemos que el alto consumo de tarjeta no era un _outlier_! Quizá los numeros enormes
 puedan explicarse por la unidad usada, que desconocemos.
 
+Otra opción es que todas esas observaciones sean _outliers_, por error multiplicadas
+por un factor grande.
+
 ```{r}
 filter(d, consumo_tc > 0) %>% ggplot(aes(color, consumo_tc)) + 
   geom_point(aes(alpha = I(log(consumo_tc)) / 50), position = "jitter", color = "gray") + 
@@ -153,4 +156,15 @@ d %>%
   GGally::ggpairs()
 ```
 
+El resto de las categóricas no parece tener nada raro. Y al graficarlas contra las
+cuantitativas nada me llama la atención particularmente.
+
+# outliers
+
+En resumen, tenemos outliers en la columna `edad`, que eliminamos tomando como _cutoff_ la edad
+de la persona mas longeva alguna vez registrada en Argentina. 
+
+En la columna `tiene_pin` tenemos unas ~65 observaciones con un nivel mal asignado.
+El resto de las variables en esas observaciones tienen pinta normal, por lo que 
+les asignaria `NA` en la variable `tiene_pin` y listo.
 
