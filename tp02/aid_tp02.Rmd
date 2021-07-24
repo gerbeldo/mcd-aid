@@ -18,6 +18,7 @@ editor_options:
 ```{r}
 library(tidyverse)
 theme_set(theme_classic())
+knitr::opts_chunk$set(warning = F, message = F)
 ```
 
 # cargo datos
@@ -63,7 +64,9 @@ Primero hago un gráfico con todas las combinaciones, y coloreando según el la 
 por lo que más abajo la vamos a ir partiendo.
 
 ```{r}
-d %>% select(-id) %>%  GGally::ggpairs(aes(color = color), showStrips = T)
+d %>%
+  select(-id) %>%
+  GGally::ggpairs(aes(color = color), showStrips = T)
 ```
 
 ## cuantitativas
@@ -71,7 +74,9 @@ d %>% select(-id) %>%  GGally::ggpairs(aes(color = color), showStrips = T)
 Por un lado graficamos las variables cuantitativas:
 
 ```{r}
-d %>% select(where(is.numeric)) %>% GGally::ggpairs()
+d %>%
+  select(where(is.numeric)) %>%
+  GGally::ggpairs()
 ```
 
 En la columna correcpondiente a edad vemos claramente un grupo de observaciones muy extremas.
@@ -94,7 +99,9 @@ d %>% filter(edad <= 114) -> d
 Grafico las cuantitativas nuevamente y vemos que la columna de edad está mas linda.
 
 ```{r}
-d %>% select(where(is.numeric)) %>% GGally::ggpairs()
+d %>%
+  select(where(is.numeric)) %>%
+  GGally::ggpairs()
 ```
 
 Con respecto a antiguedad, vemos que hay un subgrupo muy separado de los otros (por
@@ -108,7 +115,7 @@ colapsadas en 284 y 337.
 
 ```{r}
 d %>% ggplot(aes(color, antiguedad, color = color)) +
-  geom_point(aes(alpha = I(antiguedad) / 700), position = "jitter", color = "gray" ) + 
+  geom_point(aes(alpha = I(antiguedad) / 700), position = "jitter", color = "gray") +
   geom_boxplot(outlier.shape = NA, alpha = 0) +
   geom_hline(yintercept = 284, linetype = "dashed", alpha = 0.3) +
   geom_hline(yintercept = 337, linetype = "dashed", alpha = 0.3) +
@@ -126,10 +133,24 @@ Otra opción es que todas esas observaciones sean _outliers_, por error multipli
 por un factor grande.
 
 ```{r}
-filter(d, consumo_tc > 0) %>% ggplot(aes(color, consumo_tc)) + 
-  geom_point(aes(alpha = I(log(consumo_tc)) / 50), position = "jitter", color = "gray") + 
+filter(d, consumo_tc > 0) %>% ggplot(aes(color, consumo_tc)) +
+  geom_point(aes(alpha = I(log(consumo_tc)) / 50), position = "jitter", color = "gray") +
   geom_boxplot(alpha = 0) +
   scale_y_log10()
+```
+
+Con respecto a las variables `sueldo` y `mov90_cta` si bien hay _outliers_ definidos
+"a la Tukey", ninguno de los valores son "imposibles" por lo cual no hago nada
+al respecto.
+
+```{r}
+d %>% ggplot(aes(color, sueldo)) +
+  geom_boxplot()
+```
+
+```{r}
+d %>% ggplot(aes(color, mov90_cta)) +
+  geom_boxplot()
 ```
 
 
@@ -167,4 +188,84 @@ de la persona mas longeva alguna vez registrada en Argentina.
 En la columna `tiene_pin` tenemos unas ~65 observaciones con un nivel mal asignado.
 El resto de las variables en esas observaciones tienen pinta normal, por lo que 
 les asignaria `NA` en la variable `tiene_pin` y listo.
+
+Por último, me resultan extrañas las observaciones de la variable `consumo_tc`; son montos
+demasiado altos. Ademas, no correlacionan con la variable `sueldo` lo cual es extraño.
+
+```{r}
+d %>%
+  filter(consumo_tc < 1e6) %>%
+  select(sueldo, consumo_tc) %>%
+  GGally::ggpairs()
+```
+
+Graficando un _scatterplot_, con los ejes logaritmicos vemos que el grupo de `consumo_tc` alto
+es tiene forma similar al del resto, pero como "subido". Lo cual soporta la hipótesis
+de que son todos _outliers_, y que por error les agregaron algo, o los multiplicaron por algún factor.
+(nótese que no hay puntos rojos en la nube inferior, ya que el orden de las capas de ggplot
+hace que queden por encima de los puntos negros.)
+
+```{r}
+d %>% ggplot(aes(sueldo, consumo_tc)) +
+  geom_point() +
+  geom_point(data = filter(d, consumo_tc > 1e6), color = "red")
+```
+
+```{r}
+d %>% ggplot(aes(sueldo, consumo_tc)) +
+  geom_point() +
+  geom_point(data = filter(d, consumo_tc > 1e6), color = "red") +
+  scale_y_log10() +
+  scale_x_log10()
+```
+
+Con respecto a estos datos, quizá les asignaria NA en la variable `consumo_tc`.
+
+# mahalanobis
+
+Para calcular las distancias de Mahalanobis necesito unicamente las variables
+cuantitativas. Ademas, tengo que eliminar los `NA`s.
+
+```{r}
+d %>%
+  select(where(is.numeric)) %>%
+  filter(complete.cases(d)) %>% 
+  mahalanobis(center = colMeans(.), cov = cov(.)) -> mahalanobis_distances
+```
+
+```{r}
+d %>% 
+  filter(complete.cases(d)) %>%
+  mutate(mahalanobis = mahalanobis_distances) -> d_distances
+```
+
+
+```{r}
+d_distances %>%
+  mutate(idu = as.numeric(rownames(d_distances))) %>% 
+  ggplot(aes(idu, mahalanobis)) +
+  geom_point() +
+  theme(axis.text.x = NULL) +
+  geom_segment(aes(xend = idu, yend = mahalanobis, y = 0)) 
+```
+
+```{r}
+d_distances %>% filter(mahalanobis > 30) %>% 
+  ggplot(aes(sueldo, consumo_tc)) + geom_point() +
+  scale_x_log10() + scale_y_log10()
+```
+
+```{r}
+d_distances %>% 
+  ggplot(aes(sueldo, consumo_tc, color = log(mahalanobis))) + geom_point() +
+  scale_x_log10() + scale_y_log10() + scale_color_viridis_c()
+```
+
+```{r}
+d_distances %>% ggplot(aes(sueldo, consumo_tc)) +
+  geom_point() +
+  geom_point(data = filter(d_distances, mahalanobis > 15), color = "red") +
+  scale_y_log10() +
+  scale_x_log10()
+```
 
