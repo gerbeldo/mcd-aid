@@ -288,7 +288,39 @@ d_distances %>% ggplot(aes(sueldo, consumo_tc)) +
   scale_x_log10()
 ```
 
+# correlograms
+
+Para las variables cuantitativas podemos hacer un correlograma
 
 
+
+# profile plots
+
+Para los graficos de perfiles, me interesan las medias/medianas para diferentes
+agrupamientos segun las categoricas.
+
+```{r}
+d %>%
+  group_by(color) %>%
+  # calculo la media para todas las columnas numericas. sin tener en cuenta NAs
+  summarise(across(is.numeric, mean, na.rm = T)) %>%
+  # convierto en tabla formato largo
+  pivot_longer(-color, names_to = "var", values_to = "mean") %>%
+  ggplot(aes(var, mean, color = color, group = color)) +
+  geom_point() +
+  geom_line()
+```
+
+```{r}
+d %>%
+  group_by(color) %>%
+  # calculo la media para todas las columnas numericas. sin tener en cuenta NAs
+  summarise(across(is.numeric, median, na.rm = T)) %>%
+  # convierto en tabla formato largo
+  pivot_longer(-color, names_to = "var", values_to = "median") %>%
+  ggplot(aes(var, median, color = color, group = color)) +
+  geom_point() +
+  geom_line()
+```
 
 
