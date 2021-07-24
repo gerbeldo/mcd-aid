@@ -15,7 +15,7 @@ editor_options:
     wrap: 72
 ---
 
-```{r}
+```{r message=F}
 library(tidyverse)
 theme_set(theme_classic())
 knitr::opts_chunk$set(warning = F, message = F)
@@ -267,12 +267,13 @@ _cutoff_. Elimino las lineas del lollipop para evitar el _overplotting_.
 
 ```{r}
 d_distances %>%
-  mutate(idu = as.numeric(rownames(d_distances))) %>% 
+  mutate(idu = as.numeric(rownames(d_distances))) %>%
   ggplot(aes(idu, mahalanobis)) +
   geom_point(alpha = 0.5, size = 1) +
   scale_y_log10() +
-  geom_hline(aes(yintercept = quantile(mahalanobis, 0.95)), linetype = "dashed")
-  
+  geom_hline(aes(yintercept = quantile(mahalanobis, 0.95)),
+             linetype = "dashed",
+             size = 1, color = "red")
 ```
 
 Finalmente, grafico el consumo de tarjeta de credito en funcion del sueldo, y 
@@ -350,4 +351,26 @@ d %>%
   geom_line() +
   scale_color_manual(values = colors) +
   facet_wrap(~g_var, scales = "free")
+```
+
+# sample
+
+Primero calculo la proporcion de churn en todo el dataset.
+
+```{r}
+set.seed(1)
+d %>%
+  select(churn) %>%
+  table() %>%
+  prop.table()
+```
+
+Luego tomo una muestra del 20%. Vemos que da practicamente igual.
+
+```{r}
+d %>% 
+  select(churn) %>% 
+  sample_frac(0.2) %>% 
+  table() %>%
+  prop.table()
 ```
