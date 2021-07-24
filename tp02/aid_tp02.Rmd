@@ -231,41 +231,64 @@ d %>%
   select(where(is.numeric)) %>%
   filter(complete.cases(d)) %>% 
   mahalanobis(center = colMeans(.), cov = cov(.)) -> mahalanobis_distances
-```
 
-```{r}
 d %>% 
   filter(complete.cases(d)) %>%
   mutate(mahalanobis = mahalanobis_distances) -> d_distances
 ```
 
+Graficamos unos _lollipops_ con las distancias, y tomando el indice de la 
+observacion como x. Vemos que hay observaciones con distancias muy grandes.
 
 ```{r}
 d_distances %>%
   mutate(idu = as.numeric(rownames(d_distances))) %>% 
   ggplot(aes(idu, mahalanobis)) +
   geom_point() +
-  theme(axis.text.x = NULL) +
-  geom_segment(aes(xend = idu, yend = mahalanobis, y = 0)) 
+  geom_segment(aes(xend = idu, yend = mahalanobis, y = 0))
+
 ```
 
-```{r}
-d_distances %>% filter(mahalanobis > 30) %>% 
-  ggplot(aes(sueldo, consumo_tc)) + geom_point() +
-  scale_x_log10() + scale_y_log10()
-```
+Para definir un _cutoff_, puedo usar la distribución de distancias, y tomar como
+_outlier_ a las observaciones con distancias en el 5% mas alto de la distribución.
 
 ```{r}
-d_distances %>% 
-  ggplot(aes(sueldo, consumo_tc, color = log(mahalanobis))) + geom_point() +
-  scale_x_log10() + scale_y_log10() + scale_color_viridis_c()
+d_distances %>%
+  ggplot(aes(mahalanobis)) +
+  geom_density() +
+  geom_vline(aes(xintercept = quantile(mahalanobis, 0.95)), linetype = "dashed") +
+  scale_x_log10()
 ```
+
+Graficamos nuevamente los _lollipops_, pero agregando el _cutoff_. Grafico el eje y
+logaritmico, ya que el rango es muy grande, y no se aprecia la posicion del 
+_cutoff_. Elimino las lineas del lollipop para evitar el _overplotting_.
+
+
+```{r}
+d_distances %>%
+  mutate(idu = as.numeric(rownames(d_distances))) %>% 
+  ggplot(aes(idu, mahalanobis)) +
+  geom_point(alpha = 0.5, size = 1) +
+  scale_y_log10() +
+  geom_hline(aes(yintercept = quantile(mahalanobis, 0.95)), linetype = "dashed")
+  
+```
+
+Finalmente, grafico el consumo de tarjeta de credito en funcion del sueldo, y 
+coloreo los _outliers_ en rojo. Vemos que la mayoria de los puntos de la nube 
+superior son efectivamente outliers. En la nube inferior tambien hay outliers,
+probablemente debido a las distancias con respecto a las otras variables.
 
 ```{r}
 d_distances %>% ggplot(aes(sueldo, consumo_tc)) +
   geom_point() +
-  geom_point(data = filter(d_distances, mahalanobis > 15), color = "red") +
+  geom_point(data = filter(d_distances, mahalanobis > 10), color = "red") +
   scale_y_log10() +
   scale_x_log10()
 ```
+
+
+
+
 
