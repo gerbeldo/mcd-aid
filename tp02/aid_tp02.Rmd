@@ -288,10 +288,16 @@ d_distances %>% ggplot(aes(sueldo, consumo_tc)) +
   scale_x_log10()
 ```
 
-# correlograms
+# correlogram
 
 Para las variables cuantitativas podemos hacer un correlograma
 
+```{r}
+d %>% 
+  select(where(is.numeric)) %>% 
+  GGally::ggcorr(label = T, hjust = 0.7, vjust = 2, angle = -45) +
+  theme_minimal()
+```
 
 
 # profile plots
