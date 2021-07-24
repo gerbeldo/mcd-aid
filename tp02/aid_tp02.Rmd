@@ -299,7 +299,6 @@ d %>%
   theme_minimal()
 ```
 
-
 # profile plots
 
 Para los graficos de perfiles, me interesan las medias/medianas para diferentes
@@ -307,26 +306,38 @@ agrupamientos segun las categoricas.
 
 ```{r}
 d %>%
-  group_by(color) %>%
-  # calculo la media para todas las columnas numericas. sin tener en cuenta NAs
+  select(-id) %>%
+  filter(tiene_pin != 2) %>%
+  pivot_longer(
+    cols = c(color, tiene_pin, cliente_pas, churn),
+    names_to = "g_var", values_to = "g_val"
+  ) %>%
+  
+  group_by(g_var, g_val) %>%
   summarise(across(is.numeric, mean, na.rm = T)) %>%
-  # convierto en tabla formato largo
-  pivot_longer(-color, names_to = "var", values_to = "mean") %>%
-  ggplot(aes(var, mean, color = color, group = color)) +
+  pivot_longer(-c(g_var, g_val)) %>%
+  
+  ggplot(aes(name, value, color = g_val, group = g_val)) +
   geom_point() +
-  geom_line()
+  geom_line() +
+  facet_wrap(~g_var, scales = "free")
 ```
 
 ```{r}
 d %>%
-  group_by(color) %>%
-  # calculo la media para todas las columnas numericas. sin tener en cuenta NAs
+  select(-id) %>%
+  filter(tiene_pin != 2) %>%
+  pivot_longer(
+    cols = c(color, tiene_pin, cliente_pas, churn),
+    names_to = "g_var", values_to = "g_val"
+  ) %>%
+  
+  group_by(g_var, g_val) %>%
   summarise(across(is.numeric, median, na.rm = T)) %>%
-  # convierto en tabla formato largo
-  pivot_longer(-color, names_to = "var", values_to = "median") %>%
-  ggplot(aes(var, median, color = color, group = color)) +
+  pivot_longer(-c(g_var, g_val)) %>%
+  
+  ggplot(aes(name, value, color = g_val, group = g_val)) +
   geom_point() +
-  geom_line()
+  geom_line() +
+  facet_wrap(~g_var, scales = "free")
 ```
-
-
