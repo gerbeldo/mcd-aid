@@ -305,6 +305,9 @@ Para los graficos de perfiles, me interesan las medias/medianas para diferentes
 agrupamientos segun las categoricas.
 
 ```{r}
+
+colors <- c("red", "green3", "blue", "violet", "black", "gray")
+
 d %>%
   select(-id) %>%
   filter(tiene_pin != 2) %>%
@@ -320,10 +323,16 @@ d %>%
   ggplot(aes(name, value, color = g_val, group = g_val)) +
   geom_point() +
   geom_line() +
-  facet_wrap(~g_var, scales = "free")
+  scale_color_manual(values = colors) +
+  facet_wrap(~g_var, scales = "free_y") +
+  labs(x = "") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ```{r}
+
+colors <- c("red", "green3", "blue", "violet", "black", "gray")
+
 d %>%
   select(-id) %>%
   filter(tiene_pin != 2) %>%
@@ -339,5 +348,6 @@ d %>%
   ggplot(aes(name, value, color = g_val, group = g_val)) +
   geom_point() +
   geom_line() +
+  scale_color_manual(values = colors) +
   facet_wrap(~g_var, scales = "free")
 ```
